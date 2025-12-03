@@ -81,6 +81,7 @@ class DayThree : Day {
         }
     }
 
+    // Part 1 Two Pointer Solution
     private suspend fun sumTwoDigitMaxes(banks: List<BatteryBank>): Long =
         withContext(Dispatchers.Main) {
             var sum = 0L
@@ -111,6 +112,7 @@ class DayThree : Day {
         }
 
 
+    // Part 2 Window Solution, also works for Part 1 by passing in joltageLength = 2
     private suspend fun sumBankMaxes(banks: List<BatteryBank>, joltageLength: Int): Long =
         withContext(Dispatchers.Main) {
             var sum = 0L

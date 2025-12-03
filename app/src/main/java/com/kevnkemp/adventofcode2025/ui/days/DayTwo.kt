@@ -21,17 +21,7 @@ import kotlinx.coroutines.withContext
 import kotlin.text.split
 
 class DayTwo() : Day {
-
-    // attempts
-    // 1. 23146541099
-    // 2. 23039913998
-
-
-    // part 2 attempts
-    // 1. 36156785904
-    // 2. 35946947250
-    // 3. 35950619148
-
+    
     @Composable
     override fun Compose(modifier: Modifier) {
         val context = LocalContext.current
@@ -80,6 +70,7 @@ class DayTwo() : Day {
         }
     }
 
+    // Part 1 Solution
     private suspend fun sumInvalidIdsPart1(input: List<String>): Long =
         withContext(Dispatchers.IO) {
             var count = 0L
@@ -103,6 +94,7 @@ class DayTwo() : Day {
             count
         }
 
+    // Part 2 Solution
     private suspend fun sumInvalidIdsPart2(input: List<String>): Long =
         withContext(Dispatchers.IO) {
             var count = 0L

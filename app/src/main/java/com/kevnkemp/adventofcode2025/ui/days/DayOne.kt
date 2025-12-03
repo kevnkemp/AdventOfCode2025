@@ -36,8 +36,10 @@ class DayOne : Day {
 
         var previousPosition = 0
 
+        // Part 1 solution variable
         var exactZeroCount = 0
 
+        // Part 2 solution variable when summed with exactZeroCount
         var passedZeroCount = 0
 
         private val rotations: List<Rotation>
