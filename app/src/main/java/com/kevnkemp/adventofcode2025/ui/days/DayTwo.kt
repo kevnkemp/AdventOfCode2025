@@ -1,5 +1,6 @@
 package com.kevnkemp.adventofcode2025.ui.days
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,19 +36,12 @@ class DayTwo() : Day {
         val coroutineScope = rememberCoroutineScope()
         LaunchedEffect(Unit) {
             coroutineScope.launch {
-                val input = buildInput(context, "aoc_25_day2.txt")
-                launch {
-                    val startTime = System.currentTimeMillis()
+                val input = buildInput<List<String>>(context, "aoc_25_day2.txt")
+                part1Duration = measureTime {
                     part1Answer = sumInvalidIdsPart1(input)
-                    val endTime = System.currentTimeMillis()
-                    part1Duration = (endTime - startTime)
-
                 }
-                launch {
-                    val startTime = System.currentTimeMillis()
+                part2Duration = measureTime {
                     part2Answer = sumInvalidIdsPart2(input)
-                    val endTime = System.currentTimeMillis()
-                    part2Duration = (endTime - startTime)
                 }
             }
         }
@@ -58,12 +52,12 @@ class DayTwo() : Day {
         ) {
 
             part1Answer?.let {
-                Text(text = "Part 1 answer is $part1Answer and took $part1Duration milliseconds")
+                Text(text = "Part 1 answer is $part1Answer and took $part1Duration ms")
             } ?: run {
                 Text(text = "Calculating Part 1...")
             }
             part2Answer?.let {
-                Text(text = "Part 2 answer is $it and took $part2Duration milliseconds")
+                Text(text = "Part 2 answer is $it and took $part2Duration ms")
             } ?: run {
                 Text(text = "Calculating Part 2...")
             }
@@ -127,11 +121,12 @@ class DayTwo() : Day {
             count
         }
 
-    private suspend fun buildInput(context: android.content.Context, input: String): List<String> =
+    override suspend fun <T> buildInput(context: Context, input: String): T =
         withContext(Dispatchers.IO) {
             val input = context.assets.open(input).bufferedReader().readLine()
-            input.split(",")
+            input.split(",") as T
         }
+
 }
 
 

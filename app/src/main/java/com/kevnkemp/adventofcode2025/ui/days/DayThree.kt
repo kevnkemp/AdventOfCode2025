@@ -37,24 +37,15 @@ class DayThree : Day {
         val coroutineScope = rememberCoroutineScope()
         LaunchedEffect(Unit) {
             coroutineScope.launch {
-                val batteryBanks = buildInput(context, "aoc_25_day3.txt")
-                launch {
-                    val startTime = System.currentTimeMillis()
+                val batteryBanks = buildInput<List<BatteryBank>>(context, "aoc_25_day3.txt")
+                p1Time = measureTime {
                     part1Solution = sumBankMaxes(batteryBanks, 2)
-                    val endTime = System.currentTimeMillis()
-                    p1Time = endTime - startTime
                 }
-                launch {
-                    val startTime = System.currentTimeMillis()
+                p1bTime = measureTime {
                     part1Rudimentary = sumTwoDigitMaxes(batteryBanks,)
-                    val endTime = System.currentTimeMillis()
-                    p1bTime = endTime - startTime
                 }
-                launch {
-                    val startTime = System.currentTimeMillis()
+                p2Time = measureTime {
                     part2Solution = sumBankMaxes(batteryBanks, 12)
-                    val endTime = System.currentTimeMillis()
-                    p2Time = endTime - startTime
                 }
             }
         }
@@ -134,12 +125,12 @@ class DayThree : Day {
             sum
         }
 
-    private suspend fun buildInput(context: Context, input: String): List<BatteryBank> =
+    override suspend fun <T> buildInput(context: Context, input: String): T =
         withContext(Dispatchers.IO) {
             val input = context.assets.open(input).bufferedReader().readLines()
             input.map { digits ->
                 BatteryBank(digits = digits.mapNotNull { it.digitToInt() })
-            }
+            } as T
         }
 
     data class BatteryBank(val digits: List<Int>)

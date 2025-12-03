@@ -2,11 +2,19 @@ package com.kevnkemp.adventofcode2025.ui.days
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.material3.Card
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -16,34 +24,48 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.kevnkemp.adventofcode2025.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DayEntryScreen(modifier: Modifier = Modifier, onNavigateToDay: (Int) -> Unit) {
 
-        Column(
-            modifier = modifier
-                .padding()
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            for (day in 1..12) {
-                Card(
+    LazyVerticalStaggeredGrid(
+        modifier = modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxSize(),
+        columns = StaggeredGridCells.Fixed(2),
+        verticalItemSpacing = 16.dp,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+
+    ) {
+        for (day in 1..12) {
+            item {
+                ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .height(100.dp)
                         .clickable {
                             onNavigateToDay(day)
                         }
+
                 ) {
-                    Text(
-                        modifier = Modifier.padding(8.dp),
-                        text = "Navigate to Day $day Screen"
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(8.dp),
+                            text = "Day $day",
+                            fontSize = 24.sp,
+                        )
+                    }
                 }
             }
         }
+    }
 
 }
