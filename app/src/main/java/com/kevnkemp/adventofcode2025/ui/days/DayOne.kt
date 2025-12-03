@@ -76,7 +76,7 @@ class DayOne : Day {
         // Part 2 solution variable when summed with exactZeroCount
         var passedZeroCount = 0
 
-        suspend fun rotate(rotations: List<Rotation>) = withContext(Dispatchers.Main) {
+        suspend fun rotate(rotations: List<Rotation>) = withContext(Dispatchers.Default) {
             for (rotation in rotations) {
                 previousPosition = currentPosition
                 when (rotation.direction) {
