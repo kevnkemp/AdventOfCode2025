@@ -1,26 +1,22 @@
 package com.kevnkemp.adventofcode2025.ui.days
 
 import android.content.Context
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.kevnkemp.adventofcode2025.ui.common.AnswerCard
+import com.kevnkemp.adventofcode2025.ui.common.AnswerColumn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class DayFour : Day {
+class DayFour : Day<MutableMap<Int, MutableList<Char>>> {
 
 
     @Composable
@@ -36,11 +32,10 @@ class DayFour : Day {
         var p2Time: Long by remember { mutableLongStateOf(0L) }
         var p2TimeRecursive: Long by remember { mutableLongStateOf(0L) }
 
-        val coroutineScope = rememberCoroutineScope()
         LaunchedEffect(Unit) {
             launch {
-                val testGrid = buildInput<List<String>>(context, "aoc_25_day4_test.txt")
-                val grid = buildInput<List<String>>(context, "aoc_25_day4.txt")
+                val testGrid = buildInput(context, "aoc_25_day4_test.txt")
+                val grid = buildInput(context, "aoc_25_day4.txt")
                 p1Time = measureTime {
                     part1Solution = findNumberOfRollsInGrid(grid)
                 }
@@ -51,49 +46,44 @@ class DayFour : Day {
                     part2Solution = countAccessibleRolesLoop(grid)
                 }
                 p2TimeRecursive = measureTime {
-                    part2SolutionRecursive= countAccessibleRollsRecursion(grid)
+                    part2SolutionRecursive = countAccessibleRollsRecursion(grid)
                 }
 
             }
         }
 
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            testSolution?.let { res ->
-                Text(text = "Answer for test input: $res calculated in ${testTime}ms")
-            } ?: run {
-                Text(text = "Calculating test solution...")
-            }
-            part1Solution?.let { res ->
-                Text(text = "Answer for Part 1: $res calculated in ${p1Time}ms")
-            } ?: run {
-                Text(text = "Calculating Part 1...")
-            }
-            part2Solution?.let { res ->
-                Text(text = "Answer for Part 2: $res calculated in ${p2Time}ms")
-            } ?: run {
-                Text(text = "Calculating Part 2...")
-            }
-            part2SolutionRecursive?.let { res ->
-                Text(text = "Answer for Part 2 recursive: $res calculated in ${p2TimeRecursive}ms")
-            } ?: run {
-                Text(text = "Calculating Part 2 recursively...")
-            }
+        AnswerColumn {
+            AnswerCard(
+                answerName = "Test Input",
+                answer = { testSolution },
+                elapsedTime = { testTime.takeIf { testSolution != null } },
+            )
+            AnswerCard(
+                answerName = "Part 1",
+                answer = { part1Solution },
+                elapsedTime = { p1Time.takeIf { part1Solution != null } },
+            )
+            AnswerCard(
+                answerName = "Part 1",
+                answer = { part2Solution },
+                elapsedTime = { p2Time.takeIf { part2Solution != null } },
+            )
+            AnswerCard(
+                answerName = "Part 1",
+                answer = { part2SolutionRecursive },
+                elapsedTime = { p2TimeRecursive.takeIf { part2SolutionRecursive != null } },
+            )
         }
     }
 
-    private suspend fun countAccessibleRolesLoop(grid: List<String>): Int = withContext(Dispatchers.Main) {
+    private suspend fun countAccessibleRolesLoop(grid: MutableMap<Int, MutableList<Char>>): Int = withContext(Dispatchers.Main) {
         var count = 0
-        val mutableGrid = grid.toMutableList()
         val positionsToUpdate = mutableListOf(0 to 0)
         while (positionsToUpdate.isNotEmpty()) {
             positionsToUpdate.clear()
-            for (y in 0..mutableGrid.size - 1) {
-                for (x in 0..mutableGrid[y].length - 1) {
-                    if (mutableGrid.isCellAccessible(x = x, y = y)) {
+            for (y in 0..grid.size - 1) {
+                for (x in 0..(grid[y]?.size?.minus(1) ?: 0)) {
+                    if (grid.isCellAccessible(x = x, y = y)) {
                         count++
                         positionsToUpdate.add(x to y)
                     }
@@ -101,51 +91,59 @@ class DayFour : Day {
             }
             for (position in positionsToUpdate) {
                 val (x, y) = position
-                val rowChars = mutableGrid[y].toCharArray()
-                rowChars[x] = 'x'
-                mutableGrid[y] = String(rowChars)
+                grid[y]?.set(x, 'x')
             }
         }
         count
     }
 
-    private suspend fun countAccessibleRollsRecursion(grid: List<String>, count: Int = 0): Int = withContext(Dispatchers.Main) {
-        var localCount = count
-        val mutableGrid = grid.toMutableList()
-        var foundAccessible = false
+    private suspend fun countAccessibleRollsRecursion(
+        grid: MutableMap<Int, MutableList<Char>>,
+        x: Int = 0,
+        y: Int = 0,
+    ): Int = withContext(Dispatchers.Main) {
+        if (!grid.isCellAccessible(x = x, y = y)) return@withContext 0
 
-        for (i in 0..mutableGrid.size - 1) {
-            for (j in 0..mutableGrid[i].length - 1) {
-                if (mutableGrid.isCellAccessible(x = j, y = i)) {
-                    localCount++
-                    foundAccessible = true
-                    val rowChars = mutableGrid[i].toCharArray()
-                    rowChars[j] = 'x'
-                    mutableGrid[i] = String(rowChars)
-                }
+        grid[y]?.set(x, 'x')
+        var count = 1
+
+        val c = grid[y]?.size ?: 0
+        val r = grid.size
+
+        // Check all 8 neighboring cells
+        val neighbors = listOf(
+            x - 1 to y - 1,  // top-left
+            x to y - 1,      // top
+            x + 1 to y - 1,  // top-right
+            x - 1 to y,      // left
+            x + 1 to y,      // right
+            x - 1 to y + 1,  // bottom-left
+            x to y + 1,      // bottom
+            x + 1 to y + 1   // bottom-right
+        )
+
+        for ((nx, ny) in neighbors) {
+            if (nx in 0..<c && ny in 0..<r) {
+                count += countAccessibleRollsRecursion(grid, nx, ny)
             }
         }
-        if (foundAccessible) {
-            countAccessibleRollsRecursion(mutableGrid, localCount)
-        } else {
-            localCount
-        }
+        count
     }
 
-    private suspend fun findNumberOfRollsInGrid(grid: List<String>): Int = withContext(Dispatchers.Main) {
+    private suspend fun findNumberOfRollsInGrid(grid: MutableMap<Int, MutableList<Char>>): Int = withContext(Dispatchers.Main) {
         var count = 0
 
-        for (i in 0..grid.size-1) {
-            for (j in 0..grid[i].length-1) {
+        for (i in 0..grid.size - 1) {
+            for (j in 0..(grid[i]?.size?.minus(1) ?: 0)) {
                 if (grid.isCellAccessible(x = j, y = i)) count++
             }
         }
         count
     }
 
-    private fun List<String>.isCellAccessible(x: Int, y: Int): Boolean {
-        if (this[y][x] != '@') return false
-        val c = this[y].length
+    private fun MutableMap<Int, MutableList<Char>>.isCellAccessible(x: Int, y: Int): Boolean {
+        if (this[y]?.get(x) != '@') return false
+        val c = this[y]?.size ?: 0
         val r = this.size
         val leftIndex = x - 1
         val rightIndex = x + 1
@@ -155,28 +153,44 @@ class DayFour : Day {
         val positonsToCheck = mutableListOf<Char>()
         if (leftIndex > -1) {
             if (upIndex > -1) {
-                positonsToCheck.add(this[upIndex][leftIndex])
+                this[upIndex]?.get(leftIndex)?.let {
+                    positonsToCheck.add(it)
+                }
             }
             if (downIndex< r) {
-                positonsToCheck.add(this[downIndex][leftIndex])
+                this[downIndex]?.get(leftIndex)?.let {
+                    positonsToCheck.add(it)
+                }
             }
-            positonsToCheck.add(this[y][leftIndex])
+            this[y]?.get(leftIndex)?.let {
+                positonsToCheck.add(it)
+            }
         }
         if (rightIndex < c) {
             if (upIndex > -1) {
-                positonsToCheck.add(this[upIndex][rightIndex])
+                this[upIndex]?.get(rightIndex)?.let {
+                    positonsToCheck.add(it)
+                }
             }
             if (downIndex < r) {
-                positonsToCheck.add(this[downIndex][rightIndex])
+                this[downIndex]?.get(rightIndex)?.let {
+                    positonsToCheck.add(it)
+                }
             }
-            positonsToCheck.add(this[y][rightIndex])
+            this[y]?.get(rightIndex)?.let {
+                positonsToCheck.add(it)
+            }
         }
 
         if (upIndex > -1) {
-            positonsToCheck.add(this[upIndex][x])
+            this[upIndex]?.get(x)?.let {
+                positonsToCheck.add(it)
+            }
         }
         if (downIndex < r) {
-            positonsToCheck.add(this[downIndex][x])
+            this[downIndex]?.get(x)?.let {
+                positonsToCheck.add(it)
+            }
         }
 
 
@@ -186,8 +200,12 @@ class DayFour : Day {
         return isAccessible
     }
 
-    override suspend fun <T> buildInput(context: Context, input: String): T =
+    override suspend fun buildInput(context: Context, input: String) =
         withContext(Dispatchers.IO) {
-            context.assets.open(input).bufferedReader().readLines()
-        } as T
+            val map = mutableMapOf<Int, MutableList<Char>>()
+            context.assets.open(input).bufferedReader().readLines().mapIndexed { index, line ->
+                map.put(index, line.map { it }.toMutableList())
+            }
+            map
+        }
 }

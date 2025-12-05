@@ -1,10 +1,6 @@
 package com.kevnkemp.adventofcode2025.ui.days
 
 import android.content.Context
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,15 +9,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.kevnkemp.adventofcode2025.ui.common.AnswerCard
+import com.kevnkemp.adventofcode2025.ui.common.AnswerColumn
+import com.kevnkemp.adventofcode2025.ui.days.DayThree.BatteryBank
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.pow
 
-class DayThree : Day {
+class DayThree : Day<List<BatteryBank>> {
 
     @Composable
     override fun Compose(modifier: Modifier) {
@@ -37,7 +35,7 @@ class DayThree : Day {
         val coroutineScope = rememberCoroutineScope()
         LaunchedEffect(Unit) {
             coroutineScope.launch {
-                val batteryBanks = buildInput<List<BatteryBank>>(context, "aoc_25_day3.txt")
+                val batteryBanks = buildInput(context, "aoc_25_day3.txt")
                 p1Time = measureTime {
                     part1Solution = sumBankMaxes(batteryBanks, 2)
                 }
@@ -49,26 +47,22 @@ class DayThree : Day {
                 }
             }
         }
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            part1Rudimentary?.let { res ->
-                Text(text = "Answer for Part 1 rudimentary: $res calculated in ${p1bTime}ms")
-            } ?: run {
-                Text(text = "Calculating Part 1b...")
-            }
-            part1Solution?.let { res ->
-                Text(text = "Answer for Part 1: $res calculated in ${p1Time}ms")
-            } ?: run {
-                Text(text = "Calculating Part 1...")
-            }
-            part2Solution?.let { res ->
-                Text(text = "Answer for Part 2: $res calculated in ${p2Time}ms")
-            } ?: run {
-                Text(text = "Calculating Part 2...")
-            }
+        AnswerColumn {
+            AnswerCard(
+                answerName = "Part 1",
+                answer = { part1Rudimentary },
+                elapsedTime = { p1bTime.takeIf { part1Rudimentary != null } },
+            )
+            AnswerCard(
+                answerName = "Part 1",
+                answer = { part1Solution },
+                elapsedTime = { p1Time.takeIf { part1Solution != null } },
+            )
+            AnswerCard(
+                answerName = "Part 2",
+                answer = { part2Solution },
+                elapsedTime = { p2Time.takeIf { part2Solution != null } },
+            )
         }
     }
 
@@ -125,12 +119,12 @@ class DayThree : Day {
             sum
         }
 
-    override suspend fun <T> buildInput(context: Context, input: String): T =
+    override suspend fun buildInput(context: Context, input: String) =
         withContext(Dispatchers.IO) {
             val input = context.assets.open(input).bufferedReader().readLines()
             input.map { digits ->
                 BatteryBank(digits = digits.mapNotNull { it.digitToInt() })
-            } as T
+            }
         }
 
     data class BatteryBank(val digits: List<Int>)

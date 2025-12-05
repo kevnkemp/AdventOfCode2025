@@ -1,10 +1,6 @@
 package com.kevnkemp.adventofcode2025.ui.days
 
 import android.content.Context
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,14 +9,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.kevnkemp.adventofcode2025.ui.common.AnswerCard
+import com.kevnkemp.adventofcode2025.ui.common.AnswerColumn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class DayOne : Day {
+class DayOne : Day<List<DayOne.Rotation>> {
 
     @Composable
     override fun Compose(modifier: Modifier) {
@@ -35,7 +32,7 @@ class DayOne : Day {
         val coroutineScope = rememberCoroutineScope()
         LaunchedEffect(Unit) {
             coroutineScope.launch {
-                val input = buildInput<List<Rotation>>(context, "aoc_25_day1.txt")
+                val input = buildInput(context, "aoc_25_day1.txt")
                 duration = measureTime {
                     dial.rotate(input)
                     part1Solution = dial.exactZeroCount
@@ -44,24 +41,17 @@ class DayOne : Day {
             }
         }
 
-        Column(
-            modifier = modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            part1Solution?.let { res ->
-                Text(text = "Final count for Part 1 is: $res")
-            } ?: run {
-                Text(text = "Calculating Part 1...")
-            }
-            part2Solution?.let { res ->
-                Text(text = "Final count for Part 2 is: $res")
-            } ?: run {
-                Text(text = "Calculating Part 2...")
-            }
-            if (part1Solution != null && part2Solution != null) {
-                Text(text = "Calculated in ${duration}ms")
-            }
+        AnswerColumn {
+            AnswerCard(
+                answerName = "Part 1",
+                answer = { part1Solution },
+                elapsedTime = { duration.takeIf { part1Solution != null } },
+            )
+            AnswerCard(
+                answerName = "Part 2",
+                answer = { part2Solution },
+                elapsedTime = { duration.takeIf { part2Solution != null } },
+            )
         }
     }
 
@@ -139,7 +129,7 @@ class DayOne : Day {
         }
     }
 
-    override suspend fun <T> buildInput(context: Context, input: String): T =
+    override suspend fun buildInput(context: Context, input: String) =
         withContext(Dispatchers.IO) {
             val input = context.assets.open(input).bufferedReader().readLines()
             input.mapNotNull { rotation ->
@@ -153,7 +143,7 @@ class DayOne : Day {
                         null
                     }
                 }
-            } as T
+            }
         }
 }
 

@@ -10,7 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.CoroutineScope
 
-interface Day {
+interface Day<T> {
 
     @Composable
     fun Compose(modifier: Modifier = Modifier) {
@@ -30,5 +30,5 @@ interface Day {
         return endTime - startTime
     }
 
-    suspend fun <T> buildInput(context: Context, input: String): T
+    suspend fun buildInput(context: Context, input: String): T
 }
