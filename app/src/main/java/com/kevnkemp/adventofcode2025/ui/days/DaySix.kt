@@ -3,7 +3,6 @@ package com.kevnkemp.adventofcode2025.ui.days
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -19,15 +18,17 @@ import kotlinx.coroutines.withContext
 
 class DaySix : Day<List<DaySix.Problem>> {
 
-
     @Composable
     override fun Compose(modifier: Modifier) {
 
-        var testSolution: Long? by remember { mutableStateOf(null) }
-        var testTime: Long by remember { mutableLongStateOf(0L) }
+        var part1TestSolution: Long? by remember { mutableStateOf(null) }
+        var part1TestTime: Long by remember { mutableLongStateOf(0L) }
 
         var part1Solution: Long? by remember { mutableStateOf(null) }
         var part1Time: Long by remember { mutableLongStateOf(0L) }
+
+        var part2TestSolution: Long? by remember { mutableStateOf(null) }
+        var part2TestTime: Long by remember { mutableLongStateOf(0L) }
 
         var part2Solution: Long? by remember { mutableStateOf(null) }
         var part2Time: Long by remember { mutableLongStateOf(0L) }
@@ -37,30 +38,38 @@ class DaySix : Day<List<DaySix.Problem>> {
         LaunchedEffect(coroutineScope) {
             val testInput = buildInput(context, "aoc_25_day6_test.txt")
             val input = buildInput(context, "aoc_25_day6.txt")
-            println(testInput)
             measureTime(
-                { testSolution = part1(testInput) },
-                { testTime = it }
+                { part1TestSolution = part1(testInput) },
+                { part1TestTime = it }
             )
             measureTime(
                 { part1Solution = part1(input) },
                 { part1Time = it }
             )
             measureTime(
-                { part2Solution = part2(testInput) },
+                { part2TestSolution = part2(testInput) },
+                { part2TestTime = it }
+            )
+            measureTime(
+                { part2Solution = part2(input) },
                 { part2Time = it }
             )
         }
         AnswerColumn {
             AnswerCard(
                 answerName = "Test Input Part 1",
-                answer = { testSolution },
-                elapsedTime = { testTime.takeIf { testSolution != null } },
+                answer = { part1TestSolution },
+                elapsedTime = { part1TestTime.takeIf { part1TestSolution != null } },
             )
             AnswerCard(
                 answerName = "Part 1",
                 answer = { part1Solution },
                 elapsedTime = { part1Time.takeIf { part1Solution != null } },
+            )
+            AnswerCard(
+                answerName = "Test Input Part 2",
+                answer = { part2TestSolution },
+                elapsedTime = { part2TestTime.takeIf { part2TestSolution != null } },
             )
             AnswerCard(
                 answerName = "Test Input Part 2",
@@ -86,8 +95,7 @@ class DaySix : Day<List<DaySix.Problem>> {
             var currentProblemSolution = 0L
             val maxLength = problem.numbers.maxOf { it.length }
             for (i in maxLength-1 downTo 0) {
-                 val currentNumber = problem.numbers.mapNotNull { it.getOrNull(i) }.joinToString(separator = "").toLong()
-                println("currentNumber: $currentNumber")
+                 val currentNumber = problem.numbers.mapNotNull { it.getOrNull(i) }.joinToString(separator = "").trim().toLong()
                 when (problem.operator) {
                     Operator.ADD -> currentProblemSolution += currentNumber
                     Operator.MULTIPLY -> {
@@ -103,46 +111,49 @@ class DaySix : Day<List<DaySix.Problem>> {
         return count
     }
 
-    // num space num
-    // num space+ space number
-    // num space space+ num
-    // num space+ space space+ num
-
-    val regy = "(?<=(\\d|\\+|\\*)(\\s))\\s(?=(\\s)(\\d|\\+|\\*))".toRegex()
     override suspend fun buildInput(context: Context, input: String): List<Problem> = withContext(
         Dispatchers.IO
     ) {
         val problems = mutableListOf<Problem>()
-        val whiteSpaceRegex = "(?<=(\\d|\\+|\\*))\\s".toRegex()
-        context.assets.open(input).bufferedReader().readLines().map { line ->
-            println("line: $line")
-            val lineParts = line.trim().split(whiteSpaceRegex)
-            if (problems.isEmpty()) {
-                problems.addAll(lineParts.map { Problem(listOf(it), Operator.ADD) })
-            } else {
-                lineParts.forEachIndexed { index, part ->
-                    if (!part.contains("+") && !part.contains("*")) {
-                        problems[index] = problems[index].copy(
-                            numbers = problems[index].numbers + part
-                        )
-                    } else {
-                        problems[index] = problems[index].copy(
-                            operator = when (part.trim()) {
-                                "+" -> Operator.ADD
-                                "*" -> Operator.MULTIPLY
-                                else -> throw IllegalArgumentException("Unknown operator: $part")
-                            }
-                        )
-                    }
+        val lines = context.assets.open(input).bufferedReader().readLines()
+        lines.last().forEachIndexed { i, c ->
+            if (c == '*' || c == '+') {
+                c.toOperator()?.let { op ->
+                    problems.add(Problem(operator = op, startIndex = i))
+                }
+            }
+        }
+        for (line in lines.dropLast(1)) {
+            for (i in 0..<problems.size) {
+                if (i == problems.size - 1) {
+                    problems[i]  = problems[i].copy(
+                        numbers = problems[i].numbers + line.subSequence(problems[i].startIndex, line.length).toString()
+                    )
+                } else {
+                    problems[i] = problems[i].copy(
+                        numbers = problems[i].numbers + line.subSequence(
+                            problems[i].startIndex,
+                            problems[i + 1].startIndex - 1
+                        ).toString()
+                    )
                 }
             }
         }
         problems
     }
 
+    fun Char.toOperator(): Operator? {
+        return when (this) {
+            '+' -> Operator.ADD
+            '*' -> Operator.MULTIPLY
+            else -> null
+        }
+    }
+
     data class Problem(
-        val numbers: List<String>,
+        val numbers: List<String> = listOf(),
         val operator: Operator,
+        val startIndex: Int,
     )
 
     enum class Operator {
