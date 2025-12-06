@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 interface Day<T> {
 
@@ -28,6 +29,18 @@ interface Day<T> {
         this.block()
         val endTime = System.currentTimeMillis()
         return endTime - startTime
+    }
+
+    suspend fun CoroutineScope.measureTime(
+        block: suspend CoroutineScope.() -> Unit,
+        onComplete: (Long) -> Unit
+    ) {
+        launch {
+            val startTime = System.currentTimeMillis()
+            block()
+            val endTime = System.currentTimeMillis()
+            onComplete(endTime - startTime)
+        }
     }
 
     suspend fun buildInput(context: Context, input: String): T
