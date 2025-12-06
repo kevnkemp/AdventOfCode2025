@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.kevnkemp.adventofcode2025.ui.common.AnswerCard
 import com.kevnkemp.adventofcode2025.ui.common.AnswerColumn
+import com.kevnkemp.adventofcode2025.ui.common.InputCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -30,29 +31,47 @@ class DayFive : Day<DayFive.IngredientDatabase> {
         var p1TimeOpt: Long by remember { mutableLongStateOf(0L) }
         var testTime: Long by remember { mutableLongStateOf(0L) }
         var p2Time: Long by remember { mutableLongStateOf(0L) }
+        var inputDuration by remember { mutableLongStateOf(0L) }
+        var testInputDuration by remember { mutableLongStateOf(0L) }
 
         LaunchedEffect(Unit) {
             launch {
-                val testIngredientDatabase = buildInput(context, "aoc_25_day5_test.txt")
-                val ingredientDatabase = buildInput(context, "aoc_25_day5.txt")
+                val testIngredientDatabase = measureTimeWithResult {
+                    buildInput(context, "aoc_25_day5_test.txt")
+                }.also {
+                    testInputDuration = it.elapsedTimeMs
+                }
+                val ingredientDatabase = measureTimeWithResult {
+                    buildInput(context, "aoc_25_day5.txt")
+                }.also {
+                    inputDuration = it.elapsedTimeMs
+                }
                 p1Time = measureTime {
-                    part1Solution = countFreshIngredients(ingredientDatabase)
+                    part1Solution = countFreshIngredients(ingredientDatabase.result)
                 }
                 p1TimeOpt = measureTime {
-                    part1SolutionOpt = part1Optimized(ingredientDatabase)
+                    part1SolutionOpt = part1Optimized(ingredientDatabase.result)
                 }
 
                 testTime = measureTime {
-                    testSolution = countFreshIngredients(testIngredientDatabase)
+                    testSolution = countFreshIngredients(testIngredientDatabase.result)
                 }
                 p2Time = measureTime {
-                    part2Solution = countTotal(ingredientDatabase)
+                    part2Solution = countTotal(ingredientDatabase.result)
                 }
 
             }
         }
 
         AnswerColumn {
+            InputCard(
+                inputName = "Test Input",
+                elapsedTime = { testInputDuration.takeIf { it > 0L } }
+            )
+            InputCard(
+                inputName = "Input",
+                elapsedTime = { inputDuration.takeIf { it > 0L } }
+            )
             AnswerCard(
                 answerName = "Test Input Part 1",
                 answer = { testSolution },

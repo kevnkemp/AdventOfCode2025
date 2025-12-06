@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.kevnkemp.adventofcode2025.ui.common.AnswerCard
 import com.kevnkemp.adventofcode2025.ui.common.AnswerColumn
+import com.kevnkemp.adventofcode2025.ui.common.InputCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -37,39 +38,49 @@ class DayTwo() : Day<List<String>> {
         var part2AnswerAI: Long? by remember { mutableStateOf(null) }
         var part2AnswerMid: Long? by remember { mutableStateOf(null) }
 
+        var inputDuration by remember { mutableLongStateOf(0L) }
+
         val coroutineScope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
             coroutineScope.launch {
-                val input = buildInput(context, "aoc_25_day2.txt")
+                val input = measureTimeWithResult {
+                    buildInput(context, "aoc_25_day2.txt")
+                }.also {
+                    inputDuration = it.elapsedTimeMs
+                }
                 measureTime(
-                    { part1Answer = sumInvalidIdsPart1(input) },
+                    { part1Answer = sumInvalidIdsPart1(input.result) },
                     { part1Duration = it }
                 )
 
                 measureTime(
-                    { part2Answer = sumInvalidIdsPart2(input) },
+                    { part2Answer = sumInvalidIdsPart2(input.result) },
                     { part2Duration = it }
                 )
 
                 measureTime(
                     {
-                        val mergedRanges = buildMergedRanges(input)
+                        val mergedRanges = buildMergedRanges(input.result)
                         part2AnswerMerged = sumInvalidIdsPart2(mergedRanges)
                     },
                     { part2DurationMerged = it }
                 )
                 measureTime(
-                    { part2AnswerAI = sumInvalidIdsPart2AI(input)},
+                    { part2AnswerAI = sumInvalidIdsPart2AI(input.result)},
                     { part2DurationAI = it }
                 )
                 measureTime(
-                    { part2AnswerMid = sumInvalidIdsPart2Middle(input)},
+                    { part2AnswerMid = sumInvalidIdsPart2Middle(input.result)},
                     { part2DurationMid = it }
                 )
             }
         }
         AnswerColumn {
+            InputCard(
+                inputName = "Input",
+                elapsedTime = { inputDuration.takeIf { it > 0L } }
+            )
             AnswerCard(
                 answerName = "Part 1",
                 answer = { part1Answer },

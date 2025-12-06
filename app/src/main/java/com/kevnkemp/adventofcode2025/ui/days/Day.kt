@@ -31,6 +31,15 @@ interface Day<T> {
         return endTime - startTime
     }
 
+    suspend fun <T> CoroutineScope.measureTimeWithResult(
+        block: suspend CoroutineScope.() -> T
+    ): TimedResult<T> {
+        val startTime = System.currentTimeMillis()
+        val result = block()
+        val endTime = System.currentTimeMillis()
+        return TimedResult(result, endTime - startTime)
+    }
+
     suspend fun CoroutineScope.measureTime(
         block: suspend CoroutineScope.() -> Unit,
         onComplete: (Long) -> Unit

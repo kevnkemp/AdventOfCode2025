@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.kevnkemp.adventofcode2025.ui.common.AnswerCard
 import com.kevnkemp.adventofcode2025.ui.common.AnswerColumn
+import com.kevnkemp.adventofcode2025.ui.common.InputCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,27 +33,46 @@ class DayFour : Day<MutableMap<Int, MutableList<Char>>> {
         var p2Time: Long by remember { mutableLongStateOf(0L) }
         var p2TimeRecursive: Long by remember { mutableLongStateOf(0L) }
 
+        var inputDuration by remember { mutableLongStateOf(0L) }
+        var testInputDuration by remember { mutableLongStateOf(0L) }
         LaunchedEffect(Unit) {
             launch {
-                val testGrid = buildInput(context, "aoc_25_day4_test.txt")
-                val grid = buildInput(context, "aoc_25_day4.txt")
+                val testGrid = measureTimeWithResult {
+                    buildInput(context, "aoc_25_day4_test.txt")
+                }.also {
+                    testInputDuration = it.elapsedTimeMs
+                }
+                val grid = measureTimeWithResult {
+                    buildInput(context, "aoc_25_day4.txt")
+                }.also {
+                    inputDuration = it.elapsedTimeMs
+                }
                 p1Time = measureTime {
-                    part1Solution = findNumberOfRollsInGrid(grid)
+                    part1Solution = findNumberOfRollsInGrid(grid.result)
                 }
                 testTime = measureTime {
-                    testSolution = findNumberOfRollsInGrid(testGrid)
+                    testSolution = findNumberOfRollsInGrid(testGrid.result)
                 }
                 p2Time = measureTime {
-                    part2Solution = countAccessibleRolesLoop(grid)
+                    part2Solution = countAccessibleRolesLoop(grid.result)
                 }
                 p2TimeRecursive = measureTime {
-                    part2SolutionRecursive = countAccessibleRollsRecursion(grid)
+                    part2SolutionRecursive = countAccessibleRollsRecursion(grid.result)
                 }
 
             }
         }
 
         AnswerColumn {
+            InputCard(
+                inputName = "Test Input",
+                elapsedTime = { testInputDuration.takeIf { it > 0L } }
+            )
+            InputCard(
+                inputName = "Input",
+                elapsedTime = { inputDuration.takeIf { it > 0L } }
+            )
+
             AnswerCard(
                 answerName = "Test Input",
                 answer = { testSolution },
@@ -76,26 +96,27 @@ class DayFour : Day<MutableMap<Int, MutableList<Char>>> {
         }
     }
 
-    private suspend fun countAccessibleRolesLoop(grid: MutableMap<Int, MutableList<Char>>): Int = withContext(Dispatchers.Main) {
-        var count = 0
-        val positionsToUpdate = mutableListOf(0 to 0)
-        while (positionsToUpdate.isNotEmpty()) {
-            positionsToUpdate.clear()
-            for (y in 0..grid.size - 1) {
-                for (x in 0..(grid[y]?.size?.minus(1) ?: 0)) {
-                    if (grid.isCellAccessible(x = x, y = y)) {
-                        count++
-                        positionsToUpdate.add(x to y)
+    private suspend fun countAccessibleRolesLoop(grid: MutableMap<Int, MutableList<Char>>): Int =
+        withContext(Dispatchers.Main) {
+            var count = 0
+            val positionsToUpdate = mutableListOf(0 to 0)
+            while (positionsToUpdate.isNotEmpty()) {
+                positionsToUpdate.clear()
+                for (y in 0..grid.size - 1) {
+                    for (x in 0..(grid[y]?.size?.minus(1) ?: 0)) {
+                        if (grid.isCellAccessible(x = x, y = y)) {
+                            count++
+                            positionsToUpdate.add(x to y)
+                        }
                     }
                 }
+                for (position in positionsToUpdate) {
+                    val (x, y) = position
+                    grid[y]?.set(x, 'x')
+                }
             }
-            for (position in positionsToUpdate) {
-                val (x, y) = position
-                grid[y]?.set(x, 'x')
-            }
+            count
         }
-        count
-    }
 
     private suspend fun countAccessibleRollsRecursion(
         grid: MutableMap<Int, MutableList<Char>>,
@@ -130,16 +151,17 @@ class DayFour : Day<MutableMap<Int, MutableList<Char>>> {
         count
     }
 
-    private suspend fun findNumberOfRollsInGrid(grid: MutableMap<Int, MutableList<Char>>): Int = withContext(Dispatchers.Main) {
-        var count = 0
+    private suspend fun findNumberOfRollsInGrid(grid: MutableMap<Int, MutableList<Char>>): Int =
+        withContext(Dispatchers.Main) {
+            var count = 0
 
-        for (i in 0..grid.size - 1) {
-            for (j in 0..(grid[i]?.size?.minus(1) ?: 0)) {
-                if (grid.isCellAccessible(x = j, y = i)) count++
+            for (i in 0..grid.size - 1) {
+                for (j in 0..(grid[i]?.size?.minus(1) ?: 0)) {
+                    if (grid.isCellAccessible(x = j, y = i)) count++
+                }
             }
+            count
         }
-        count
-    }
 
     private fun MutableMap<Int, MutableList<Char>>.isCellAccessible(x: Int, y: Int): Boolean {
         if (this[y]?.get(x) != '@') return false
@@ -157,7 +179,7 @@ class DayFour : Day<MutableMap<Int, MutableList<Char>>> {
                     positonsToCheck.add(it)
                 }
             }
-            if (downIndex< r) {
+            if (downIndex < r) {
                 this[downIndex]?.get(leftIndex)?.let {
                     positonsToCheck.add(it)
                 }

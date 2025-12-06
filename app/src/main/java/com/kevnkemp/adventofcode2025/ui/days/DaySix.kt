@@ -13,8 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.kevnkemp.adventofcode2025.ui.common.AnswerCard
 import com.kevnkemp.adventofcode2025.ui.common.AnswerColumn
+import com.kevnkemp.adventofcode2025.ui.common.InputCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.text.get
+import kotlin.text.set
 
 class DaySix : Day<List<DaySix.Problem>> {
 
@@ -32,18 +35,30 @@ class DaySix : Day<List<DaySix.Problem>> {
 
         var part2Solution: Long? by remember { mutableStateOf(null) }
         var part2Time: Long by remember { mutableLongStateOf(0L) }
+        var inputTime: Long by remember { mutableLongStateOf(0L) }
+        var inputTimeV2: Long by remember { mutableLongStateOf(0L) }
 
         val context = LocalContext.current
         val coroutineScope = rememberCoroutineScope()
         LaunchedEffect(coroutineScope) {
             val testInput = buildInput(context, "aoc_25_day6_test.txt")
-            val input = buildInput(context, "aoc_25_day6.txt")
+            val inputResult = measureTimeWithResult {
+                buildInput(context, "aoc_25_day6.txt")
+            }.also {
+                inputTime = it.elapsedTimeMs
+            }
+            val inputResultV2 = measureTimeWithResult {
+                buildInputV2(context, "aoc_25_day6.txt")
+            }.also {
+                inputTimeV2 = it.elapsedTimeMs
+            }
+
             measureTime(
                 { part1TestSolution = part1(testInput) },
                 { part1TestTime = it }
             )
             measureTime(
-                { part1Solution = part1(input) },
+                { part1Solution = part1(inputResult.result) },
                 { part1Time = it }
             )
             measureTime(
@@ -51,11 +66,19 @@ class DaySix : Day<List<DaySix.Problem>> {
                 { part2TestTime = it }
             )
             measureTime(
-                { part2Solution = part2(input) },
+                { part2Solution = part2(inputResult.result) },
                 { part2Time = it }
             )
         }
         AnswerColumn {
+            InputCard(
+                inputName = "Input Time",
+                elapsedTime = { inputTime },
+            )
+            InputCard(
+                inputName = "Input Time V2",
+                elapsedTime = { inputTimeV2 },
+            )
             AnswerCard(
                 answerName = "Test Input Part 1",
                 answer = { part1TestSolution },
@@ -140,6 +163,39 @@ class DaySix : Day<List<DaySix.Problem>> {
             }
         }
         problems
+    }
+
+    suspend fun buildInputV2(context: Context, input: String): List<Problem> = withContext(
+        Dispatchers.IO
+    ) {
+        context.assets.open(input).bufferedReader().useLines { lines ->
+            val linesList = lines.toList()
+            val operatorLine = linesList.last()
+
+            // Build problems with operators and indices
+            val problems = operatorLine.mapIndexedNotNull { index, char ->
+                char.toOperator()?.let { operator ->
+                    Problem(operator = operator, startIndex = index)
+                }
+            }.toMutableList()
+
+            // Extract end indices for each problem
+            val ranges = problems.mapIndexed { i, problem ->
+                val endIndex = problems.getOrNull(i + 1)?.startIndex?.minus(1) ?: operatorLine.length
+                problem.startIndex to endIndex
+            }
+
+            // Process number lines once, building up each problem's numbers
+            linesList.dropLast(1).forEach { line ->
+                ranges.forEachIndexed { i, (start, end) ->
+                    problems[i] = problems[i].copy(
+                        numbers = problems[i].numbers + line.substring(start, minOf(end, line.length))
+                    )
+                }
+            }
+
+            problems
+        }
     }
 
     fun Char.toOperator(): Operator? {

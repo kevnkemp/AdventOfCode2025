@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.kevnkemp.adventofcode2025.ui.common.AnswerCard
 import com.kevnkemp.adventofcode2025.ui.common.AnswerColumn
+import com.kevnkemp.adventofcode2025.ui.common.InputCard
 import com.kevnkemp.adventofcode2025.ui.days.DayThree.BatteryBank
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,23 +32,33 @@ class DayThree : Day<List<BatteryBank>> {
         var p1Time: Long by remember { mutableLongStateOf(0L) }
         var p1bTime: Long by remember { mutableLongStateOf(0L) }
         var p2Time: Long by remember { mutableLongStateOf(0L) }
+        var inputDuration by remember { mutableLongStateOf(0L) }
+
 
         val coroutineScope = rememberCoroutineScope()
         LaunchedEffect(Unit) {
             coroutineScope.launch {
-                val batteryBanks = buildInput(context, "aoc_25_day3.txt")
+                val batteryBanks = measureTimeWithResult {
+                    buildInput(context, "aoc_25_day3.txt")
+                }.also {
+                    inputDuration = it.elapsedTimeMs
+                }
                 p1Time = measureTime {
-                    part1Solution = sumBankMaxes(batteryBanks, 2)
+                    part1Solution = sumBankMaxes(batteryBanks.result, 2)
                 }
                 p1bTime = measureTime {
-                    part1Rudimentary = sumTwoDigitMaxes(batteryBanks,)
+                    part1Rudimentary = sumTwoDigitMaxes(batteryBanks.result,)
                 }
                 p2Time = measureTime {
-                    part2Solution = sumBankMaxes(batteryBanks, 12)
+                    part2Solution = sumBankMaxes(batteryBanks.result, 12)
                 }
             }
         }
         AnswerColumn {
+            InputCard(
+                inputName = "Input",
+                elapsedTime = { inputDuration.takeIf { it > 0L } }
+            )
             AnswerCard(
                 answerName = "Part 1",
                 answer = { part1Rudimentary },

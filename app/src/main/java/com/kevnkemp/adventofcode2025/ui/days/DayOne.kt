@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.kevnkemp.adventofcode2025.ui.common.AnswerCard
 import com.kevnkemp.adventofcode2025.ui.common.AnswerColumn
+import com.kevnkemp.adventofcode2025.ui.common.InputCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -28,13 +29,18 @@ class DayOne : Day<List<DayOne.Rotation>> {
         var part1Solution: Int? by remember { mutableStateOf(null) }
         var part2Solution: Int? by remember { mutableStateOf(null) }
         var duration by remember { mutableLongStateOf(0L) }
+        var inputDuration by remember { mutableLongStateOf(0L) }
 
         val coroutineScope = rememberCoroutineScope()
         LaunchedEffect(Unit) {
             coroutineScope.launch {
-                val input = buildInput(context, "aoc_25_day1.txt")
+                val input = measureTimeWithResult {
+                    buildInput(context, "aoc_25_day1.txt")
+                }.also {
+                    inputDuration = it.elapsedTimeMs
+                }
                 duration = measureTime {
-                    dial.rotate(input)
+                    dial.rotate(input.result)
                     part1Solution = dial.exactZeroCount
                     part2Solution = dial.exactZeroCount + dial.passedZeroCount
                 }
@@ -42,6 +48,10 @@ class DayOne : Day<List<DayOne.Rotation>> {
         }
 
         AnswerColumn {
+            InputCard(
+                inputName = "Input",
+                elapsedTime = { inputDuration.takeIf { it > 0L } }
+            )
             AnswerCard(
                 answerName = "Part 1",
                 answer = { part1Solution },

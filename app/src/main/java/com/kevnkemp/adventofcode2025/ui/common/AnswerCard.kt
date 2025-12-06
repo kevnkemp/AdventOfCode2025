@@ -2,6 +2,7 @@ package com.kevnkemp.adventofcode2025.ui.common
 
 import android.content.ClipData
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
@@ -35,14 +38,20 @@ fun AnswerCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(16.dp)
             ) {
-                Column {
-                    Text(text = "Answer for $answerName: $res")
+                Column(
+                    modifier = Modifier.weight(2.5f),
+                ) {
+                    FlowRow {
+                        Text(text = "Answer for $answerName: ")
+                        Text(text = "$res", fontWeight = FontWeight.Bold)
+                    }
                     elapsedTime()?.let { time ->
-                        Text(text = "Calculated in ${time}ms")
+                        Text(text = "${time}ms")
                     }
                 }
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.weight(0.5f))
                 Button(
+                    modifier = Modifier.weight(1f),
                     onClick = {
                         coroutineScope.launch {
                             clipboardManager.setClipEntry(
