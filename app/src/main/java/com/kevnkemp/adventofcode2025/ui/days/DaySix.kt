@@ -1,6 +1,7 @@
 package com.kevnkemp.adventofcode2025.ui.days
 
 import android.content.Context
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -14,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.kevnkemp.adventofcode2025.ui.common.AnswerCard
 import com.kevnkemp.adventofcode2025.ui.common.AnswerColumn
 import com.kevnkemp.adventofcode2025.ui.common.InputCard
+import com.kevnkemp.adventofcode2025.ui.util.rememberSolutionState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.text.get
@@ -24,17 +26,13 @@ class DaySix : Day<List<DaySix.Problem>> {
     @Composable
     override fun Compose(modifier: Modifier) {
 
-        var part1TestSolution: Long? by remember { mutableStateOf(null) }
-        var part1TestTime: Long by remember { mutableLongStateOf(0L) }
 
-        var part1Solution: Long? by remember { mutableStateOf(null) }
-        var part1Time: Long by remember { mutableLongStateOf(0L) }
 
-        var part2TestSolution: Long? by remember { mutableStateOf(null) }
-        var part2TestTime: Long by remember { mutableLongStateOf(0L) }
+        val part1TestSolutionA by rememberSolutionState<Long?>()
+        val part1Solution by rememberSolutionState<Long?>()
+        var part2TestSolution by rememberSolutionState<Long?>()
+        var part2Solution by rememberSolutionState<Long?>()
 
-        var part2Solution: Long? by remember { mutableStateOf(null) }
-        var part2Time: Long by remember { mutableLongStateOf(0L) }
         var inputTime: Long by remember { mutableLongStateOf(0L) }
         var inputTimeV2: Long by remember { mutableLongStateOf(0L) }
 
@@ -54,20 +52,20 @@ class DaySix : Day<List<DaySix.Problem>> {
             }
 
             measureTime(
-                { part1TestSolution = part1(testInput) },
-                { part1TestTime = it }
+                { part1TestSolutionA.result(part1(testInput)) },
+                { part1TestSolutionA.time(it) }
             )
             measureTime(
-                { part1Solution = part1(inputResult.result) },
-                { part1Time = it }
+                { part1Solution.result(part1(inputResult.result))},
+                { part1Solution.time(it) }
             )
             measureTime(
-                { part2TestSolution = part2(testInput) },
-                { part2TestTime = it }
+                { part2TestSolution.result(part2(testInput)) },
+                { part2TestSolution.time(it) }
             )
             measureTime(
-                { part2Solution = part2(inputResult.result) },
-                { part2Time = it }
+                { part2Solution.result(part2(inputResult.result)) },
+                { part2Solution.time(it) }
             )
         }
         AnswerColumn {
@@ -81,23 +79,23 @@ class DaySix : Day<List<DaySix.Problem>> {
             )
             AnswerCard(
                 answerName = "Test Input Part 1",
-                answer = { part1TestSolution },
-                elapsedTime = { part1TestTime.takeIf { part1TestSolution != null } },
+                answer = { part1TestSolutionA.result },
+                elapsedTime = { part1TestSolutionA.elapsedTimeMs },
             )
             AnswerCard(
                 answerName = "Part 1",
-                answer = { part1Solution },
-                elapsedTime = { part1Time.takeIf { part1Solution != null } },
+                answer = { part1Solution.result },
+                elapsedTime = { part1Solution.elapsedTimeMs },
             )
             AnswerCard(
                 answerName = "Test Input Part 2",
-                answer = { part2TestSolution },
-                elapsedTime = { part2TestTime.takeIf { part2TestSolution != null } },
+                answer = { part2TestSolution.result },
+                elapsedTime = { part2TestSolution.elapsedTimeMs },
             )
             AnswerCard(
                 answerName = "Test Input Part 2",
-                answer = { part2Solution },
-                elapsedTime = { part2Time.takeIf { part2Solution != null } },
+                answer = { part2Solution.result },
+                elapsedTime = { part2Solution.elapsedTimeMs },
             )
         }
     }
